@@ -1,0 +1,26 @@
+---
+ansible-navigator:
+  execution-environment:
+    container-engine: podman
+    enabled: true
+    image: localhost/ee_base:latest
+    pull:
+      arguments:
+        - "--tls-verify=false"
+      policy: never
+
+  images:
+    details:
+      - ansible_version
+      - python_version
+      - ansible_collections
+
+  logging:
+    level: critical
+    append: False
+    file: /tmp/ansible_navigator.txt
+
+  playbook-artifact:
+    enable: False
+
+  mode: stdout
