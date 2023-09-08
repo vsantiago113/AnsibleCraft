@@ -1,0 +1,28 @@
+---
+version: 3
+dependencies:
+  system:
+    - python39-devel [platform:rpm]
+    - gcc [platform:rpm]
+    - git [platform:rpm]
+    - openssl-devel [platform:rpm]
+  python:
+    - future
+    - six
+    - requests
+    - pywinrm
+    - ansible-pylibssh
+  galaxy:
+    collections:
+      - name: ansible.utils
+      - name: ansible.windows
+      - name: microsoft.ad
+      - name: community.general
+
+  ansible_core:
+      package_pip: ansible-core==2.15.0
+  ansible_runner:
+      package_pip: ansible-runner==2.3.1
+  python_interpreter:
+      package_system: "python39"
+      python_path: "/usr/bin/python3.9"
