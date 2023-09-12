@@ -16,6 +16,7 @@ dependencies:
     collections:
       - name: ansible.utils
       - name: ansible.windows
+      - name: community.windows
       - name: microsoft.ad
       - name: community.general
 
