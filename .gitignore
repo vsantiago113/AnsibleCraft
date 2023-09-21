@@ -145,8 +145,10 @@ dmypy.json
 
 # Tower runtime roles
 # roles/**
+roles/*
 !roles/requirements.yml
-collections/
+collections/*
+!collections/requirements.yml
 ansible_collections/
 
 # Try tyo avoid any secrets, certs or plain-text passwords
@@ -168,6 +170,8 @@ ansible_collections/
 *.tgz
 *.vhd
 *.exe
+*.gz
+*.iso
 
 # Ansible Execution Environments
 **/context/_build/*
