@@ -1,0 +1,15 @@
+---
+windows_local_admin: "{{ vault_local_admin_password }}"
+ansible_user: "{{ vault_ad_username }}"
+ansible_password: "{{ vault_ad_password }}"
+ansible_become_method: runas
+ansible_become_password: "{{ vault_ad_password }}"
+ansible_connection: winrm
+ansible_winrm_scheme: https
+ansible_port: 5986
+ansible_winrm_server_cert_validation: ignore
+ansible_winrm_transport: ntlm
+ansible_winrm_kerberos_delegation: true
+ansible_winrm_operation_timeout_sec: 120
+ansible_winrm_read_timeout_sec: 300
+ansible_winrm_send_cbt: true

@@ -177,3 +177,6 @@ ansible_collections/
 **/context/_build/*
 **/context/Containerfile
 **/context/Dockerfile
+
+# Ignore the .trash directory used for temp artifacts
+.trash

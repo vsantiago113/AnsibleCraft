@@ -17,6 +17,7 @@ Windows Remote Management (WinRM) is Microsoft's implementation of the WS-Manage
 - [Managing Trusted Hosts](#managing-trusted-hosts)
 - [Firewall Rules](#firewall-rules)
 - [WinRM Listener](#winrm-listener)
+- [The easier way to configure WinRM for Ansible](#the-easier-way-to-configure-winrm-for-ansible)
 
 ---
 
@@ -203,6 +204,20 @@ Restart-Service WinRM
 :warning: **Note**: Always remember to use secure practices when setting up any form of remote management.
 
 After running the above script, your machine should now be configured to accept remote management requests via WinRM over HTTPS.
+
+---
+
+## The easier way to configure WinRM for Ansible
+
+You can get the PowerShell script from [Tzone-tech's GitHub account](https://github.com/Tzone-tech/ConfigureRemotingForAnsible.ps1)
+
+To configure WinRM in a Windows host just run the following PowerShell command
+
+```powershell
+-ExecutionPolicy Unrestricted -Command "Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/Tzone-tech/ConfigureRemotingForAnsible.ps1/main/ConfigureRemotingForAnsible.ps1')"
+```
+
+If you are working on a Windows host with no internet access, host the PowerShell script somewhere in the network over HTTP or HTTPS and then run the command but using your own server url for example: http://mywebsrv.local/ConfigureRemotingForAnsible.ps1
 
 ---
 
