@@ -170,6 +170,7 @@ ansible_collections/
 *.tgz
 *.vhd
 *.exe
+*.msi
 *.gz
 *.iso
 
