@@ -1,0 +1,21 @@
+configure terminal
+!
+hostname SW1-Store
+!
+interface Vlan1
+ ip address 192.168.1.230 255.255.255.0
+ no shutdown
+!
+username admin privilege 15 secret Cisco123
+!
+ip domain-name networklab.local
+crypto key generate rsa modulus 2048
+ip ssh version 2
+!
+line vty 0 4
+ exec-timeout 5 0
+ login local
+ transport input ssh
+!
+end
+write memory
