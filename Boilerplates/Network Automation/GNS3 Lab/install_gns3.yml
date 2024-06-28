@@ -1,0 +1,94 @@
+---
+- name: Install GNS3 on Ubuntu  # https://docs.gns3.com/docs/getting-started/installation/linux
+  hosts: gns3
+  gather_facts: true
+  become: true
+  tasks:
+    - name: Fail if the host is not Ubuntu
+      ansible.builtin.fail:
+        msg: "This playbook only runs on Ubuntu."
+      when: ansible_distribution != "Ubuntu"
+
+    - name: Ensure this task runs only on Ubuntu
+      ansible.builtin.debug:
+        msg: "This host is running Ubuntu."
+      when: ansible_distribution == "Ubuntu"
+
+    - name: Remove Docker packages using apt
+      ansible.builtin.apt:
+        name:
+          - docker
+          - docker-engine
+          - docker.io
+        state: absent
+        purge: true
+
+    - name: Remove Docker using snap
+      ansible.builtin.command: snap remove docker
+      changed_when: true
+
+    - name: Enable IP forwarding
+      ansible.posix.sysctl:
+        name: net.ipv4.ip_forward
+        value: 1
+        state: present
+        reload: true
+
+    - name: Add Docker GPG key
+      ansible.builtin.apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add Docker repository
+      ansible.builtin.apt_repository:
+        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+        state: present
+        update_cache: true
+
+    - name: Add GNS3 PPA repository
+      ansible.builtin.apt_repository:
+        repo: ppa:gns3/ppa
+        state: present
+
+    - name: Add i386 architecture
+      ansible.builtin.command: dpkg --add-architecture i386
+      become: true
+      changed_when: true
+
+    - name: Update and upgrade all packages
+      ansible.builtin.apt:
+        update_cache: true
+        upgrade: dist
+        cache_valid_time: 3600  # Optional: re-use the cache if it's been less than an hour since the last update
+
+    - name: Install GNS3 server and dependencies
+      ansible.builtin.apt:
+        name:
+          - gns3-server
+          - gns3-gui
+          - gns3-iou
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - software-properties-common
+          - docker-ce
+        state: present
+        update_cache: true
+
+    - name: Create list of groups
+      ansible.builtin.group:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - ubridge
+        - libvirt
+        - kvm
+        - wireshark
+        - docker
+
+    - name: Add ansible_user to groups
+      ansible.builtin.user:
+        name: "{{ ansible_user }}"
+        groups: ubridge,libvirt,kvm,wireshark,docker
+        append: true
+...
