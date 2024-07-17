@@ -5,7 +5,7 @@ import json
 from typing import List, Dict, Optional
 
 
-class ExampleInventory:
+class AnsibleDynamicInventory:
     def __init__(self):
         self.inventory = {
             '_meta': {
@@ -107,7 +107,7 @@ def main():
     parser.add_argument('--host', type=str, help='Return the requested host.')
     args = parser.parse_args()
 
-    example_inventory = ExampleInventory()
+    example_inventory = AnsibleDynamicInventory()
 
     # Example of adding multiple hosts to a group with variables
     example_inventory.add_hosts(
