@@ -181,3 +181,6 @@ ansible_collections/
 
 # Ignore the .trash directory used for temp artifacts
 .trash
+
+# macOS
+.DS_Store
