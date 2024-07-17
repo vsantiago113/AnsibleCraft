@@ -21,6 +21,9 @@ class AnsibleDynamicInventory:
             }
         }
 
+    def __getitem__(self, item):
+        return self.inventory[item]
+
     def add_hosts(self, *, hosts: Optional[List[str]] = None, group: str, vars: Optional[Dict] = None) -> None:
         """
         Add multiple hosts to a group with optional variables.
@@ -96,6 +99,38 @@ class AnsibleDynamicInventory:
         if group not in self.inventory:
             self.inventory[group] = {'hosts': []}
 
+    def get_devices(self) -> Dict[str, Dict]:
+        """
+        Retrieve the devices from '_meta -> hostvars'.
+
+        Returns:
+            Dict[str, Dict]: A dictionary of devices and their variables.
+        """
+        return self.inventory['_meta']['hostvars']
+
+    def get_groups(self) -> Dict[str, Dict]:
+        """
+        Retrieve the groups excluding '_meta'.
+
+        Returns:
+            Dict[str, Dict]: A dictionary of groups and their details.
+        """
+        return {k: v for k, v in self.inventory.items() if k != '_meta'}
+
+    def get_child_groups(self, group: str) -> List[str]:
+        """
+        Retrieve the child groups of a specified group.
+
+        Args:
+            group (str): The group to retrieve child groups from.
+
+        Returns:
+            List[str]: A list of child groups.
+        """
+        if group in self.inventory:
+            return self.inventory[group].get('children', [])
+        return []
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -148,6 +183,23 @@ def main():
                 args.host, {}
             ), indent=4
         ))
+
+    print('\n')
+
+    # Loop through devices
+    print("Devices:")
+    for device in example_inventory.get_devices():
+        print(device)
+
+    # Loop through groups
+    print("\nGroups:")
+    for group in example_inventory.get_groups():
+        print(group)
+
+    # Loop through child groups of 'group1'
+    print("\nChild groups of 'group1':")
+    for child_group in example_inventory.get_child_groups('group1'):
+        print(child_group)
 
 
 if __name__ == '__main__':
