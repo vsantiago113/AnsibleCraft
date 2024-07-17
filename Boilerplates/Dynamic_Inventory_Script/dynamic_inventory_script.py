@@ -15,6 +15,9 @@ class ExampleInventory:
                 'children': [
                     'ungrouped'
                 ]
+            },
+            'ungrouped': {
+                'hosts': []
             }
         }
 
@@ -22,7 +25,7 @@ class ExampleInventory:
                   hosts: Optional[List[str]] = None, vars: Optional[Dict] = None) -> None:
         """
         Add multiple hosts to a group with optional variables.
-        
+
         Args:
             group (str): The group to add the hosts to.
             hosts (List[str], optional): A list of host IPs or names.
@@ -31,17 +34,14 @@ class ExampleInventory:
         hosts = hosts or []
         vars = vars or {}
 
-        self._ensure_group_exists(group)
-        self.inventory.setdefault(group, {}).setdefault('hosts', []).extend(hosts)
-
         for host in hosts:
-            self.inventory['_meta']['hostvars'][host] = vars
+            self.add_host(group, host, vars)
 
-    def add_host(self, group: str,
+    def add_host(self, group: Optional[str],
                  host: str, vars: Optional[Dict] = None) -> None:
         """
         Add a single host to a group with optional variables.
-        
+
         Args:
             group (str): The group to add the host to.
             host (str): The host IP or name.
@@ -49,38 +49,54 @@ class ExampleInventory:
         """
         vars = vars or {}
 
-        self._ensure_group_exists(group)
-        self.inventory.setdefault(group, {}).setdefault('hosts', [])
-        if host not in self.inventory[group]['hosts']:
-            self.inventory[group]['hosts'].append(host)
+        self.inventory['_meta']['hostvars'].setdefault(host, {}).update(vars)
 
-        self.inventory['_meta']['hostvars'][host] = vars
+        if group:
+            self._ensure_group_exists(group)
+            if host not in self.inventory[group]['hosts']:
+                self.inventory[group]['hosts'].append(host)
+        else:
+            if host not in self.inventory['ungrouped']['hosts']:
+                self.inventory['ungrouped']['hosts'].append(host)
+
+    def add_host_to_group(self, group: str, host: str, vars: Optional[Dict] = None) -> None:
+        """
+        Add an existing host to a group, or create and add the host if it doesn't exist.
+
+        Args:
+            group (str): The group to add the host to.
+            host (str): The host IP or name.
+            vars (Dict, optional): A dictionary of variables to associate with the host.
+        """
+        self.add_host(group, host, vars)
 
     def add_child_group(self, parent_group: str, child_group: str) -> None:
         """
         Add a child group to an existing group.
-        
+
         Args:
             parent_group (str): The parent group to add the child group to.
             child_group (str): The child group to add.
         """
         self._ensure_group_exists(parent_group)
         self._ensure_group_exists(child_group)
-        
-        self.inventory.setdefault(parent_group, {}).setdefault('children', [])
+
+        if 'children' not in self.inventory[parent_group]:
+            self.inventory[parent_group]['children'] = []
         if child_group not in self.inventory[parent_group]['children']:
             self.inventory[parent_group]['children'].append(child_group)
 
     def _ensure_group_exists(self, group: str) -> None:
         """
         Ensure that a group exists in the 'all' children list.
-        
+
         Args:
             group (str): The group to ensure existence of.
         """
         if group not in self.inventory['all']['children']:
             self.inventory['all']['children'].append(group)
-        self.inventory.setdefault(group, {}).setdefault('hosts', [])
+        if group not in self.inventory:
+            self.inventory[group] = {'hosts': []}
 
 
 def main():
@@ -93,17 +109,38 @@ def main():
 
     example_inventory = ExampleInventory()
 
-    # Sample data for demonstration
+    # Example of adding multiple hosts to a group with variables
     example_inventory.add_hosts(
-        group='dbservers', hosts=['10.0.0.5', '10.0.0.1'],
-        vars={'http_port': 80}
+        group='group1', hosts=['host1'],
+        vars={
+            'ansible_host': '192.168.1.10',
+            'ansible_user': 'user1',
+            'ansible_ssh_private_key_file': '/path/to/private/key'
+        }
     )
+    example_inventory.add_hosts(
+        group='group2', hosts=['host2'],
+        vars={
+            'ansible_host': '192.168.1.11',
+            'ansible_user': 'user2',
+            'ansible_ssh_private_key_file': '/path/to/private/key'
+        }
+    )
+
+    # Example of adding a single host to the 'ungrouped' group
     example_inventory.add_host(
-        group='test_group', host='10.0.0.20', vars={'type': 'switch'}
+        group=None, host='host3', vars={
+            'ansible_host': '192.168.1.12',
+            'ansible_user': 'user3',
+            'ansible_ssh_private_key_file': '/path/to/private/key'
+        }
     )
-    example_inventory.add_child_group(
-        parent_group='test_group', child_group='dbservers'
-    )
+
+    # Example of adding an existing host to another group
+    example_inventory.add_host_to_group('group2', 'host1')
+
+    # Example of adding a child group to a group
+    example_inventory.add_child_group('group1', 'child_group1')
 
     if args.list:
         print(json.dumps(example_inventory.inventory, indent=4))
