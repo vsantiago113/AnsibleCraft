@@ -134,12 +134,12 @@ class AnsibleDynamicInventory:
         self.add_group(group=group)
         self.inventory[group]['vars'].update(group_vars)
 
-    def get_devices(self) -> Dict[str, Dict]:
+    def get_hosts(self) -> Dict[str, Dict]:
         """
-        Retrieve the devices from '_meta -> hostvars'.
+        Retrieve the hosts from '_meta -> hostvars'.
 
         Returns:
-            Dict[str, Dict]: A dictionary of devices and their variables.
+            Dict[str, Dict]: A dictionary of hosts and their variables.
         """
         return self.inventory['_meta']['hostvars']
 
@@ -180,7 +180,7 @@ class AnsibleDynamicInventory:
             return self.inventory[group].get('hosts', [])
         return []
 
-    def get_host_vars(self, host: str) -> Optional[Dict]:
+    def get_host(self, host: str) -> Optional[Dict]:
         """
         Retrieve the variables associated with a specific host.
 
@@ -192,7 +192,7 @@ class AnsibleDynamicInventory:
         """
         return self.inventory['_meta']['hostvars'].get(host)
 
-    def get_group_vars(self, group: str) -> Optional[Dict]:
+    def get_group(self, group: str) -> Optional[Dict]:
         """
         Retrieve the variables associated with a specific group.
 
@@ -269,10 +269,10 @@ def main():
             ), indent=4
         ))
 
-    # Loop through devices
-    print("Devices:")
-    for device in inventory.get_devices():
-        print(device)
+    # Loop through hosts
+    print("Hosts:")
+    for host in inventory.get_hosts():
+        print(host)
 
     # Loop through groups
     print("\nGroups:")
@@ -291,11 +291,11 @@ def main():
     print(f"Hosts in group '{group_name}':", hosts_in_group)
 
     print("\nVariables for 'host1':")
-    host_vars = inventory.get_host_vars('host1')
+    host_vars = inventory.get_host('host1')
     print(host_vars)
 
     print("\nVariables for 'group1':")
-    group_vars = inventory.get_group_vars('group1')
+    group_vars = inventory.get_group('group1')
     print(group_vars)
 
 
