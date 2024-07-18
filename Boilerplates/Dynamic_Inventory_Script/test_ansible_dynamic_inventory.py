@@ -14,9 +14,7 @@ class TestAnsibleDynamicInventory(unittest.TestCase):
         self.assertEqual(self.inventory.inventory['group1']['vars']['group_var1'], 'value1')
 
     def test_add_hosts(self):
-        self.inventory.add_hosts(
-            hosts=['host1', 'host2'], group='group1', vars={'var1': 'value1'}, group_vars={'group_var1': 'value1'}
-            )
+        self.inventory.add_hosts(hosts=['host1', 'host2'], group='group1', vars={'var1': 'value1'}, group_vars={'group_var1': 'value1'})
         self.assertIn('host1', self.inventory.inventory['_meta']['hostvars'])
         self.assertIn('host2', self.inventory.inventory['_meta']['hostvars'])
         self.assertIn('host1', self.inventory.inventory['group1']['hosts'])
@@ -24,9 +22,7 @@ class TestAnsibleDynamicInventory(unittest.TestCase):
         self.assertEqual(self.inventory.inventory['group1']['vars']['group_var1'], 'value1')
 
     def test_add_host_to_group(self):
-        self.inventory.add_host_to_group(
-            host='host1', group='group1', vars={'var1': 'value1'}, group_vars={'group_var1': 'value1'}
-            )
+        self.inventory.add_host_to_group(host='host1', group='group1', vars={'var1': 'value1'}, group_vars={'group_var1': 'value1'})
         self.assertIn('host1', self.inventory.inventory['_meta']['hostvars'])
         self.assertIn('host1', self.inventory.inventory['group1']['hosts'])
         self.assertEqual(self.inventory.inventory['group1']['vars']['group_var1'], 'value1')
@@ -46,7 +42,7 @@ class TestAnsibleDynamicInventory(unittest.TestCase):
         self.assertEqual(self.inventory.inventory['group1']['vars']['var1'], 'value1')
 
     def test_get_devices(self):
-        self.inventory.add_host(host='host1', group='group1', vars={'var1': 'value1'})
+        self.inventory.add_host(host='host1', vars={'var1': 'value1'})
         devices = self.inventory.get_devices()
         self.assertIn('host1', devices)
         self.assertEqual(devices['host1']['var1'], 'value1')

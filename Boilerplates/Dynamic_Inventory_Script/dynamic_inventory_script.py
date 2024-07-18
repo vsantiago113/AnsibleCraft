@@ -26,15 +26,15 @@ class AnsibleDynamicInventory:
         return self.inventory[item]
 
     def add_hosts(
-            self, *, hosts: Optional[List[str]] = None, group: str, vars: Optional[Dict] = None,
-            group_vars: Optional[Dict] = None
+            self, *, hosts: Optional[List[str]] = None, group: Optional[str] = None,
+            vars: Optional[Dict] = None, group_vars: Optional[Dict] = None
             ) -> None:
         """
         Add multiple hosts to a group with optional host and group variables.
 
         Args:
-            group (str): The group to add the hosts to.
             hosts (List[str], optional): A list of host IPs or names.
+            group (str, optional): The group to add the hosts to.
             vars (Dict, optional): A dictionary of variables to associate with the hosts.
             group_vars (Dict, optional): A dictionary of variables to associate with the group.
         """
@@ -42,20 +42,22 @@ class AnsibleDynamicInventory:
         vars = vars or {}
         group_vars = group_vars or {}
 
-        self._ensure_group_exists(group=group, group_vars=group_vars)
+        if group:
+            self._ensure_group_exists(group=group, group_vars=group_vars)
 
         for host in hosts:
             self.add_host(host=host, group=group, vars=vars)
 
     def add_host(
-            self, *, host: str, group: Optional[str], vars: Optional[Dict] = None, group_vars: Optional[Dict] = None
+            self, *, host: str, group: Optional[str] = None, vars: Optional[Dict] = None,
+            group_vars: Optional[Dict] = None
             ) -> None:
         """
         Add a single host to a group with optional host and group variables.
 
         Args:
-            group (str): The group to add the host to.
             host (str): The host IP or name.
+            group (str, optional): The group to add the host to.
             vars (Dict, optional): A dictionary of variables to associate with the host.
             group_vars (Dict, optional): A dictionary of variables to associate with the group.
         """
@@ -73,15 +75,16 @@ class AnsibleDynamicInventory:
                 self.inventory['ungrouped']['hosts'].append(host)
 
     def add_host_to_group(
-            self, *, host: str, group: str, vars: Optional[Dict] = None, group_vars: Optional[Dict] = None
+            self, *, host: str, group: Optional[str] = None, vars: Optional[Dict] = None,
+            group_vars: Optional[Dict] = None
             ) -> None:
         """
         Add an existing host to a group, or create and add the host if it doesn't exist,
         with optional host and group variables.
 
         Args:
-            group (str): The group to add the host to.
             host (str): The host IP or name.
+            group (str, optional): The group to add the host to.
             vars (Dict, optional): A dictionary of variables to associate with the host.
             group_vars (Dict, optional): A dictionary of variables to associate with the group.
         """
