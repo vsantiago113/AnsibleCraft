@@ -14,7 +14,9 @@ class TestAnsibleDynamicInventory(unittest.TestCase):
         self.assertEqual(self.inventory.inventory['group1']['vars']['group_var1'], 'value1')
 
     def test_add_hosts(self):
-        self.inventory.add_hosts(hosts=['host1', 'host2'], group='group1', vars={'var1': 'value1'}, group_vars={'group_var1': 'value1'})
+        self.inventory.add_hosts(
+            hosts=['host1', 'host2'], group='group1', vars={'var1': 'value1'}, group_vars={'group_var1': 'value1'}
+            )
         self.assertIn('host1', self.inventory.inventory['_meta']['hostvars'])
         self.assertIn('host2', self.inventory.inventory['_meta']['hostvars'])
         self.assertIn('host1', self.inventory.inventory['group1']['hosts'])
@@ -22,7 +24,9 @@ class TestAnsibleDynamicInventory(unittest.TestCase):
         self.assertEqual(self.inventory.inventory['group1']['vars']['group_var1'], 'value1')
 
     def test_add_host_to_group(self):
-        self.inventory.add_host_to_group(host='host1', group='group1', vars={'var1': 'value1'}, group_vars={'group_var1': 'value1'})
+        self.inventory.add_host_to_group(
+            host='host1', group='group1', vars={'var1': 'value1'}, group_vars={'group_var1': 'value1'}
+            )
         self.assertIn('host1', self.inventory.inventory['_meta']['hostvars'])
         self.assertIn('host1', self.inventory.inventory['group1']['hosts'])
         self.assertEqual(self.inventory.inventory['group1']['vars']['group_var1'], 'value1')
@@ -35,6 +39,10 @@ class TestAnsibleDynamicInventory(unittest.TestCase):
     def test_ensure_group_exists(self):
         self.inventory._ensure_group_exists(group='group1', group_vars={'var1': 'value1'})
         self.assertIn('group1', self.inventory.inventory['all']['children'])
+        self.assertEqual(self.inventory.inventory['group1']['vars']['var1'], 'value1')
+
+    def test_add_group_vars(self):
+        self.inventory.add_group_vars(group='group1', group_vars={'var1': 'value1'})
         self.assertEqual(self.inventory.inventory['group1']['vars']['var1'], 'value1')
 
     def test_get_devices(self):
