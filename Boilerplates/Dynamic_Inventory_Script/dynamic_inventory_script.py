@@ -180,6 +180,32 @@ class AnsibleDynamicInventory:
             return self.inventory[group].get('hosts', [])
         return []
 
+    def get_host_vars(self, host: str) -> Optional[Dict]:
+        """
+        Retrieve the variables associated with a specific host.
+
+        Args:
+            host (str): The host to retrieve variables for.
+
+        Returns:
+            Optional[Dict]: A dictionary of variables associated with the host, or None if the host doesn't exist.
+        """
+        return self.inventory['_meta']['hostvars'].get(host)
+
+    def get_group_vars(self, group: str) -> Optional[Dict]:
+        """
+        Retrieve the variables associated with a specific group.
+
+        Args:
+            group (str): The group to retrieve variables for.
+
+        Returns:
+            Optional[Dict]: A dictionary of variables associated with the group, or None if the group doesn't exist.
+        """
+        if group in self.inventory:
+            return self.inventory[group].get('vars', {})
+        return None
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -263,6 +289,14 @@ def main():
     group_name = 'group1'
     hosts_in_group = inventory.get_hosts_in_group(group_name)
     print(f"Hosts in group '{group_name}':", hosts_in_group)
+
+    print("\nVariables for 'host1':")
+    host_vars = inventory.get_host_vars('host1')
+    print(host_vars)
+
+    print("\nVariables for 'group1':")
+    group_vars = inventory.get_group_vars('group1')
+    print(group_vars)
 
 
 if __name__ == '__main__':

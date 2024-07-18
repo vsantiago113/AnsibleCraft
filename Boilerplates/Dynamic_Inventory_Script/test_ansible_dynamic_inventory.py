@@ -57,6 +57,18 @@ class TestAnsibleDynamicInventory(unittest.TestCase):
         child_groups = self.inventory.get_child_groups('group1')
         self.assertIn('child_group1', child_groups)
 
+    def test_get_host_vars(self):
+        self.inventory.add_host(host='host1', vars={'var1': 'value1'})
+        host_vars = self.inventory.get_host_vars('host1')
+        self.assertIsNotNone(host_vars)
+        self.assertEqual(host_vars['var1'], 'value1')
+
+    def test_get_group_vars(self):
+        self.inventory.add_group(group='group1', group_vars={'var1': 'value1'})
+        group_vars = self.inventory.get_group_vars('group1')
+        self.assertIsNotNone(group_vars)
+        self.assertEqual(group_vars['var1'], 'value1')
+
 
 if __name__ == '__main__':
     unittest.main()
