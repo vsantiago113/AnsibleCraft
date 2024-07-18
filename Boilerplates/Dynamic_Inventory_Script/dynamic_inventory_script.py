@@ -166,6 +166,20 @@ class AnsibleDynamicInventory:
             return self.inventory[group].get('children', [])
         return []
 
+    def get_hosts_in_group(self, group: str) -> List[str]:
+        """
+        Retrieve all hosts that belong to a specified group.
+
+        Args:
+            group (str): The group to retrieve hosts from.
+
+        Returns:
+            List[str]: A list of host names.
+        """
+        if group in self.inventory:
+            return self.inventory[group].get('hosts', [])
+        return []
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -175,10 +189,10 @@ def main():
     parser.add_argument('--host', type=str, help='Return the requested host.')
     args = parser.parse_args()
 
-    example_inventory = AnsibleDynamicInventory()
+    inventory = AnsibleDynamicInventory()
 
     # Example of adding multiple hosts to a group with variables
-    example_inventory.add_hosts(
+    inventory.add_hosts(
         hosts=['host1'], group='group1',
         vars={
             'ansible_host': '192.168.1.10',
@@ -190,7 +204,7 @@ def main():
             'group_var2': 'value2'
         }
     )
-    example_inventory.add_hosts(
+    inventory.add_hosts(
         hosts=['host2'], group='group2',
         vars={
             'ansible_host': '192.168.1.11',
@@ -200,7 +214,7 @@ def main():
     )
 
     # Example of adding a single host to the 'ungrouped' group
-    example_inventory.add_host(
+    inventory.add_host(
         host='host3', group=None, vars={
             'ansible_host': '192.168.1.12',
             'ansible_user': 'user3',
@@ -209,10 +223,10 @@ def main():
     )
 
     # Example of adding an existing host to another group
-    example_inventory.add_host_to_group(host='host1', group='group2')
+    inventory.add_host_to_group(host='host1', group='group2')
 
     # Example of adding a child group to a group with variables
-    example_inventory.add_child_group(
+    inventory.add_child_group(
         parent_group='group1', child_group='child_group1',
         group_vars={
             'var1': 'value1',
@@ -221,28 +235,34 @@ def main():
     )
 
     if args.list:
-        print(json.dumps(example_inventory.inventory, indent=4))
+        print(json.dumps(inventory.inventory, indent=4))
     elif args.host:
         print(json.dumps(
-            example_inventory.inventory['_meta']['hostvars'].get(
+            inventory.inventory['_meta']['hostvars'].get(
                 args.host, {}
             ), indent=4
         ))
 
     # Loop through devices
     print("Devices:")
-    for device in example_inventory.get_devices():
+    for device in inventory.get_devices():
         print(device)
 
     # Loop through groups
     print("\nGroups:")
-    for group in example_inventory.get_groups():
+    for group in inventory.get_groups():
         print(group)
 
     # Loop through child groups of 'group1'
     print("\nChild groups of 'group1':")
-    for child_group in example_inventory.get_child_groups('group1'):
+    for child_group in inventory.get_child_groups('group1'):
         print(child_group)
+
+    # Get all hosts in a specified group
+    print("\nAll hosts of group 'group1':")
+    group_name = 'group1'
+    hosts_in_group = inventory.get_hosts_in_group(group_name)
+    print(f"Hosts in group '{group_name}':", hosts_in_group)
 
 
 if __name__ == '__main__':
