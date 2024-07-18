@@ -35,10 +35,12 @@ class TestAnsibleDynamicInventory(unittest.TestCase):
     def test_add_group(self):
         self.inventory.add_group(group='group1', group_vars={'var1': 'value1'})
         self.assertIn('group1', self.inventory.inventory['all']['children'])
+        self.assertIn('vars', self.inventory.inventory['group1'])
         self.assertEqual(self.inventory.inventory['group1']['vars']['var1'], 'value1')
 
     def test_add_group_vars(self):
         self.inventory.add_group_vars(group='group1', group_vars={'var1': 'value1'})
+        self.assertIn('vars', self.inventory.inventory['group1'])
         self.assertEqual(self.inventory.inventory['group1']['vars']['var1'], 'value1')
 
     def test_get_hosts(self):
@@ -51,6 +53,7 @@ class TestAnsibleDynamicInventory(unittest.TestCase):
         self.inventory.add_host(host='host1', group='group1', vars={'var1': 'value1'})
         groups = self.inventory.get_groups()
         self.assertIn('group1', groups)
+        self.assertIn('vars', groups['group1'])
 
     def test_get_child_groups(self):
         self.inventory.add_child_group(parent_group='group1', child_group='child_group1')

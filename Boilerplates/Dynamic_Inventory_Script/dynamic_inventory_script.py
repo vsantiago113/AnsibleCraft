@@ -132,6 +132,8 @@ class AnsibleDynamicInventory:
             group_vars (Dict): A dictionary of variables to associate with the group.
         """
         self.add_group(group=group)
+        if 'vars' not in self.inventory[group]:
+            self.inventory[group]['vars'] = {}
         self.inventory[group]['vars'].update(group_vars)
 
     def get_hosts(self) -> Dict[str, Dict]:
@@ -263,11 +265,7 @@ def main():
     if args.list:
         print(json.dumps(inventory.inventory, indent=4))
     elif args.host:
-        print(json.dumps(
-            inventory.inventory['_meta']['hostvars'].get(
-                args.host, {}
-            ), indent=4
-        ))
+        print(json.dumps(inventory.get_host(args.host), indent=4))
 
     # Loop through hosts
     print("Hosts:")
