@@ -25,6 +25,22 @@ class AnsibleDynamicInventory:
     def __getitem__(self, item):
         return self.inventory[item]
 
+    def add_group(self, *, group: str, group_vars: Optional[Dict] = None) -> None:
+        """
+        Ensure that a group exists in the 'all' children list, with optional variables.
+
+        Args:
+            group (str): The group to ensure existence of.
+            group_vars (Dict, optional): A dictionary of variables to associate with the group.
+        """
+        if group not in self.inventory['all']['children']:
+            self.inventory['all']['children'].append(group)
+        if group not in self.inventory:
+            self.inventory[group] = {'hosts': [], 'vars': {}, 'children': []}
+
+        if group_vars:
+            self.add_group_vars(group=group, group_vars=group_vars)
+
     def add_hosts(
             self, *, hosts: Optional[List[str]] = None, group: Optional[str] = None,
             vars: Optional[Dict] = None, group_vars: Optional[Dict] = None
@@ -43,7 +59,7 @@ class AnsibleDynamicInventory:
         group_vars = group_vars or {}
 
         if group:
-            self._ensure_group_exists(group=group, group_vars=group_vars)
+            self.add_group(group=group, group_vars=group_vars)
 
         for host in hosts:
             self.add_host(host=host, group=group, vars=vars)
@@ -67,7 +83,7 @@ class AnsibleDynamicInventory:
         self.inventory['_meta']['hostvars'].setdefault(host, {}).update(vars)
 
         if group:
-            self._ensure_group_exists(group=group, group_vars=group_vars)
+            self.add_group(group=group, group_vars=group_vars)
             if host not in self.inventory[group]['hosts']:
                 self.inventory[group]['hosts'].append(host)
         else:
@@ -99,29 +115,13 @@ class AnsibleDynamicInventory:
             child_group (str): The child group to add.
             group_vars (Dict, optional): A dictionary of variables to associate with the child group.
         """
-        self._ensure_group_exists(group=parent_group)
-        self._ensure_group_exists(group=child_group, group_vars=group_vars)
+        self.add_group(group=parent_group)
+        self.add_group(group=child_group, group_vars=group_vars)
 
         if 'children' not in self.inventory[parent_group]:
             self.inventory[parent_group]['children'] = []
         if child_group not in self.inventory[parent_group]['children']:
             self.inventory[parent_group]['children'].append(child_group)
-
-    def _ensure_group_exists(self, *, group: str, group_vars: Optional[Dict] = None) -> None:
-        """
-        Ensure that a group exists in the 'all' children list, with optional variables.
-
-        Args:
-            group (str): The group to ensure existence of.
-            group_vars (Dict, optional): A dictionary of variables to associate with the group.
-        """
-        if group not in self.inventory['all']['children']:
-            self.inventory['all']['children'].append(group)
-        if group not in self.inventory:
-            self.inventory[group] = {'hosts': [], 'vars': {}, 'children': []}
-
-        if group_vars:
-            self.add_group_vars(group=group, group_vars=group_vars)
 
     def add_group_vars(self, *, group: str, group_vars: Dict) -> None:
         """
@@ -131,7 +131,7 @@ class AnsibleDynamicInventory:
             group (str): The group to add the variables to.
             group_vars (Dict): A dictionary of variables to associate with the group.
         """
-        self._ensure_group_exists(group=group)
+        self.add_group(group=group)
         self.inventory[group]['vars'].update(group_vars)
 
     def get_devices(self) -> Dict[str, Dict]:
