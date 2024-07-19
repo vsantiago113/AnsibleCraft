@@ -225,6 +225,38 @@ class AnsibleDynamicInventory:
             return self.inventory[group].get('vars', {})
         return None
 
+    def remove_group(self, group: str) -> None:
+        """
+        Remove a group from the inventory, including from any parent groups' children lists.
+
+        Args:
+            group (str): The group to remove.
+        """
+        if group in self.inventory:
+            del self.inventory[group]
+        if group in self.inventory['all']['children']:
+            self.inventory['all']['children'].remove(group)
+
+        for g, g_data in self.inventory.items():
+            if 'children' in g_data and group in g_data['children']:
+                g_data['children'].remove(group)
+
+    def remove_host(self, host: str) -> None:
+        """
+        Remove a host from the inventory and any group the host belongs to.
+
+        Args:
+            host (str): The host to remove.
+        """
+        if host in self.inventory['_meta']['hostvars']:
+            del self.inventory['_meta']['hostvars'][host]
+
+        for g, g_data in self.inventory.items():
+            if g == '_meta':
+                continue
+            if 'hosts' in g_data and host in g_data['hosts']:
+                g_data['hosts'].remove(host)
+
 
 def main():
     parser = argparse.ArgumentParser(description='Command line arguments for Ansible Dynamic Inventory.')
