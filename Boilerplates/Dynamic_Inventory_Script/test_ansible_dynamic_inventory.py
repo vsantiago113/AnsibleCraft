@@ -22,10 +22,12 @@ class TestAnsibleDynamicInventory(unittest.TestCase):
         self.assertEqual(self.inventory.inventory['group1']['vars']['group_var1'], 'value1')
 
     def test_add_host_to_group(self):
+        self.inventory.add_host(host='host1', group=None)
         self.inventory.add_host_to_group(host='host1', group='group1', vars={'var1': 'value1'}, group_vars={'group_var1': 'value1'})
         self.assertIn('host1', self.inventory.inventory['_meta']['hostvars'])
         self.assertIn('host1', self.inventory.inventory['group1']['hosts'])
         self.assertEqual(self.inventory.inventory['group1']['vars']['group_var1'], 'value1')
+        self.assertNotIn('host1', self.inventory.inventory['ungrouped']['hosts'])
 
     def test_add_child_group(self):
         self.inventory.add_child_group(parent_group='group1', child_group='child_group1', group_vars={'var1': 'value1'})

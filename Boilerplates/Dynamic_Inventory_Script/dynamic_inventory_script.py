@@ -18,7 +18,8 @@ class AnsibleDynamicInventory:
             },
             'ungrouped': {
                 'hosts': [],
-                'vars': {}
+                'vars': {},
+                'children': []
             }
         }
 
@@ -104,7 +105,23 @@ class AnsibleDynamicInventory:
             vars (Dict, optional): A dictionary of variables to associate with the host.
             group_vars (Dict, optional): A dictionary of variables to associate with the group.
         """
-        self.add_host(host=host, group=group, vars=vars, group_vars=group_vars)
+        vars = vars or {}
+        group_vars = group_vars or {}
+
+        self.inventory['_meta']['hostvars'].setdefault(host, {}).update(vars)
+
+        if group:
+            self.add_group(group=group, group_vars=group_vars)
+
+            # Check and remove the host from 'ungrouped' if it exists there
+            if host in self.inventory['ungrouped']['hosts']:
+                self.inventory['ungrouped']['hosts'].remove(host)
+
+            if host not in self.inventory[group]['hosts']:
+                self.inventory[group]['hosts'].append(host)
+        else:
+            if host not in self.inventory['ungrouped']['hosts']:
+                self.inventory['ungrouped']['hosts'].append(host)
 
     def add_child_group(self, *, parent_group: str, child_group: str, group_vars: Optional[Dict] = None) -> None:
         """
@@ -210,10 +227,8 @@ class AnsibleDynamicInventory:
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description='Command line arguments for Ansible Dynamic Inventory.')
-    parser.add_argument(
-        '--list', action='store_true', help='Return list of hosts.')
+    parser = argparse.ArgumentParser(description='Command line arguments for Ansible Dynamic Inventory.')
+    parser.add_argument('--list', action='store_true', help='Return list of hosts.')
     parser.add_argument('--host', type=str, help='Return the requested host.')
     args = parser.parse_args()
 
