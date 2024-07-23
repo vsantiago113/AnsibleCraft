@@ -2,7 +2,13 @@
 
 import argparse
 import json
+import yaml
+import os
 from typing import List, Dict, Optional
+
+
+CACHE_DIR = '.cache'
+CACHE_FILE = os.path.join(CACHE_DIR, 'inventory_cache.json')
 
 
 class AnsibleDynamicInventory:
@@ -257,16 +263,37 @@ class AnsibleDynamicInventory:
             if 'hosts' in g_data and host in g_data['hosts']:
                 g_data['hosts'].remove(host)
 
+    @staticmethod
+    def load_cache() -> 'AnsibleDynamicInventory':
+        """Loads the inventory from the cache file."""
+        if os.path.exists(CACHE_FILE):
+            with open(CACHE_FILE, 'r') as file:
+                try:
+                    inventory_data = json.load(file)
+                except json.JSONDecodeError:
+                    return AnsibleDynamicInventory()
+                inventory = AnsibleDynamicInventory()
+                inventory.inventory = inventory_data
+                return inventory
+        return AnsibleDynamicInventory()
 
-def main():
-    parser = argparse.ArgumentParser(description='Command line arguments for Ansible Dynamic Inventory.')
-    parser.add_argument('--list', action='store_true', help='Return list of hosts.')
-    parser.add_argument('--host', type=str, help='Return the requested host.')
-    args = parser.parse_args()
+    @staticmethod
+    def save_cache(inventory: 'AnsibleDynamicInventory') -> None:
+        """Saves the inventory to the cache file."""
+        os.makedirs(CACHE_DIR, exist_ok=True)
+        with open(CACHE_FILE, 'w') as file:
+            json.dump(inventory.inventory, file)
 
-    inventory = AnsibleDynamicInventory()
+    @staticmethod
+    def delete_cache() -> None:
+        """Deletes the cache file if it exists."""
+        if os.path.exists(CACHE_FILE):
+            os.remove(CACHE_FILE)
 
+
+def generate_inventory(inventory: AnsibleDynamicInventory) -> None:
     # Example of adding multiple hosts to a group with variables
+    print('CALLED GENERATE INVENTORY')
     inventory.add_hosts(
         hosts=['host1'], group='group1',
         vars={
@@ -309,39 +336,62 @@ def main():
         }
     )
 
+
+def main():
+    parser = argparse.ArgumentParser(description='Ansible Dynamic Inventory Script')
+    parser.add_argument('--list', action='store_true', help='List all hosts (default Ansible option)')
+    parser.add_argument('--host', help='Get variables for a specific host (default Ansible option)')
+    parser.add_argument('--group', help='List all hosts in a specific group')
+    parser.add_argument('--output', choices=['json', 'yaml'], help='Output format: json or yaml')
+    parser.add_argument('--export', help='Export inventory to a file (extension added automatically)')
+    parser.add_argument('--cache', choices=['on', 'off'], help='Enable or disable cache')
+
+    args = parser.parse_args()
+
+    if not (args.list or args.host or args.group):
+        parser.error('At least one of --list, --host, or --group must be specified.')
+
+    cache_option = args.cache.lower() if args.cache else None
+
+    if cache_option == 'off':
+        AnsibleDynamicInventory.delete_cache()
+        inventory = AnsibleDynamicInventory()
+        generate_inventory(inventory)
+    elif cache_option == 'on':
+        inventory = AnsibleDynamicInventory.load_cache()
+        if not inventory.get_hosts():
+            generate_inventory(inventory)
+            AnsibleDynamicInventory.save_cache(inventory)
+    else:
+        inventory = AnsibleDynamicInventory()
+        generate_inventory(inventory)
+
     if args.list:
-        print(json.dumps(inventory.inventory, indent=4))
+        output = inventory.inventory
     elif args.host:
-        print(json.dumps(inventory.get_host(args.host), indent=4))
+        output = inventory.get_host(args.host)
+    elif args.group:
+        output = inventory.get_group(args.group)
 
-    # Loop through hosts
-    print("Hosts:")
-    for host in inventory.get_hosts():
-        print(host)
+    if args.output == 'json':
+        output_str = json.dumps(output, indent=4)
+    elif args.output == 'yaml':
+        output_str = yaml.dump(output, default_flow_style=False)
+    else:
+        output_str = json.dumps(output)  # Default to JSON without indent
 
-    # Loop through groups
-    print("\nGroups:")
-    for group in inventory.get_groups():
-        print(group)
-
-    # Loop through child groups of 'group1'
-    print("\nChild groups of 'group1':")
-    for child_group in inventory.get_child_groups('group1'):
-        print(child_group)
-
-    # Get all hosts in a specified group
-    print("\nAll hosts of group 'group1':")
-    group_name = 'group1'
-    hosts_in_group = inventory.get_hosts_in_group(group_name)
-    print(f"Hosts in group '{group_name}':", hosts_in_group)
-
-    print("\nVariables for 'host1':")
-    host_vars = inventory.get_host('host1')
-    print(host_vars)
-
-    print("\nVariables for 'group1':")
-    group_vars = inventory.get_group('group1')
-    print(group_vars)
+    if args.export:
+        file_base, _ = os.path.splitext(args.export)
+        if args.output == 'yaml':
+            file_extension = '.yaml'
+        else:
+            file_extension = '.json'
+        file_path = f"{file_base}{file_extension}"
+        with open(file_path, 'w') as file:
+            file.write(output_str)
+        print(f"Inventory has been exported to {file_path}")
+    else:
+        print(output_str)
 
 
 if __name__ == '__main__':
