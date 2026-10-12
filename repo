@@ -1,0 +1,76 @@
+#!/bin/bash
+set -e
+
+project='/u/vsantiago/repos/test_and_debug'
+collections="$project/ansible_collections/example"
+playbook="$project/configuration_standards.yml"
+inventory="$project/inventory_ignore_.yml"
+requirements="$project/requirements_disabled_.yml"
+
+usage() {
+    cat <<'USAGE'
+usage: repo <command> [target]
+
+  push          git add, commit "Update" and push the current repository
+  lint          ansible-lint, production profile, offline
+  sync          delete the installed example collections and reinstall from requirements
+  run <target>  ansible-navigator run limited to a host or group:
+                ios ios1 ios2 nxos nxos1 nxos2
+USAGE
+}
+
+repo_push() {
+    git status
+    git add .
+    git status
+    git commit -m "Update"
+    git push
+    git status
+}
+
+repo_lint() {
+    ansible-lint --profile production --exclude .ansible --exclude .github --offline
+}
+
+repo_sync() {
+    for name in bgp cis_benchmarks network_config_mgmt; do
+        target="$collections/$name"
+        if [[ -d "$target" ]]; then
+            rm -rf -- "$target"
+            echo "Deleted $target"
+        fi
+    done
+    cd "$project"
+    ansible-galaxy collection install -r "$requirements"
+}
+
+repo_run() {
+    case "$1" in
+        ios)   host='cisco_ios' ;;
+        ios1)  host='ansiblelab-ios-sw01.example.local' ;;
+        ios2)  host='ansiblelab-ios-sw02.example.local' ;;
+        nxos)  host='cisco_nxos' ;;
+        nxos1) host='ansiblelexampleoresw01.example.local' ;;
+        nxos2) host='ansiblelexampleoresw02.example.local' ;;
+        *)
+            echo "Unknown host: $1" >&2
+            usage >&2
+            exit 1
+            ;;
+    esac
+    cd "$project"
+    ansible-navigator run "$playbook" -i "$inventory" --limit "$host"
+}
+
+case "$1" in
+    push) repo_push ;;
+    lint) repo_lint ;;
+    sync) repo_sync ;;
+    run)  repo_run "$2" ;;
+    -h|--help|help|"") usage ;;
+    *)
+        echo "Unknown command: $1" >&2
+        usage >&2
+        exit 1
+        ;;
+esac
